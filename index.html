@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
+
+        <title>Connect Four - Coding Challenge</title>
+
+        <!--
+            Skeleton frameworks are included for jQuery, Angular, and React.
+
+            Feel free to start from one of those or any other way you are comfortable with.
+
+            In any case, please run the below code (Click "Render") and verify it works as you would expect.
+
+            Write code using the HackerRank editor, or copy paste and develop locally.
+
+            Submit your work to HackerRank before time is up, and delete the samples you do not use.
+
+            Your goal is to implement a two player Connect 4 game, described here[1] and illustrated here[2]
+
+            [1]: https://en.wikipedia.org/wiki/Connect_Four
+            [2]: http://mathworld.wolfram.com/images/gifs/connect4.gif
+        -->
+
+
+        <!-- react starter app -->
+        <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+        <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+        <script type="text/babel">
+        class ReactSample extends React.Component {
+            constructor(props) {
+                super(props)
+                this.state = {
+                    height : 6, 
+                    width : 7,
+                    currentPlayer: 1,
+                    playerColors : ['red', 'blue']
+                }
+            }
+
+            resetGame = async () => {
+                this.newGameSubmitHandler();
+            }
+
+            checkWinCondition = (row, column) => {
+                console.log('check win condition for ', row, column);
+                return (
+                    this.checkDown(row+1, column, 3) 
+                    || this.checkHorizontal(row, column, 3)
+                    || this.checkDiagonals(row, column,3));
+            }
+            
+            checkHorizontal = (row, column, remaining) => {
+                return this.checkLeft(row,column-1,remaining) || this.checkRight(row, column+1,remaining);
+            }
+
+            checkDiagonals = (row, column, remaining) => {
+                return false;
+                // return (
+                // this.checkDiagonalTopRight(row, column, remaining)
+                // || this.checkDiagonalTopLeft(row, column, remaining)
+                // || this.checkDiagonalBottomLeft(row, column, remaining)
+                // || this.checkDiagonalBottomRight(row+1, column+1, remaining));
+
+            }
+
+            checkDiagonalTopRight = () => {}
+            checkDiagonalTopLeft = () => {}
+            checkDiagonalBottomLeft = () => {}
+
+            checkDiagonalBottomRight = (row, column, remaining) => {
+                if(remaining === 0){
+                    return true;
+                }
+                if(row>this.state.height || column>this.state.width){
+                    return false;
+                }
+                console.log('checkDiagonalBottomRight, ', row, column)
+                if(this.getBgColorOfCell(row, column) === this.getLastPlayerColor()) {
+                    return this.checkLeft(row+1, column+1, remaining-1);
+                } else {
+                    return false;
+                }
+            }
+
+            checkLeft = (row, column, remaining) => {
+                if(remaining === 0) {
+                    return true;
+                }
+                if (column<1) {
+                    return false;
+                } 
+                if(this.getBgColorOfCell(row, column) === this.getLastPlayerColor()) {
+                    return this.checkLeft(row, column-1, remaining-1);
+                } else {
+                    return false;
+                }
+            }
+
+            checkRight = (row, column, remaining) => {
+                if(remaining === 0) {
+                    return true;
+                }
+                if (column>this.state.width) {
+                    return false;
+                } 
+                if(this.getBgColorOfCell(row, column) === this.getLastPlayerColor()) {
+                    return this.checkRight(row, column+1, remaining-1);
+                } else {
+                    return false;
+                }
+            }
+
+            checkDown = (row, column, remaining) => {
+                if (remaining === 0){
+                    return true;
+                }
+                if (row>this.state.height) {
+                    return false;
+                } 
+                if(this.getBgColorOfCell(row, column) === this.getLastPlayerColor()) {
+                    return this.checkDown(row+1, column, remaining-1);
+                } else {
+                    return false;
+                }
+            }
+
+            handleGridClick = (element) => {
+                if(this.state.winner){
+                    this.resetGame();
+                    return;
+                }
+                const tdElement = element.target;
+                console.log('clicked on', tdElement.id);
+                const column = parseInt(tdElement.id.split('-')[2]);
+                const row = this.dropDisc(column);
+                if (row) {
+                    if(this.checkWinCondition(row, column)){
+                        this.setState({winner: this.state.currentPlayer});
+                    }
+                }
+                this.endTurn();
+            }
+
+            dropDisc = (column) => {
+                for(var row=this.state.height; row>=1; row--){
+                    const cell = document.getElementById(`td-${row}-${column}`);
+                    const color = cell.style.backgroundColor;
+                    if(color==='white'){
+                        cell.style.backgroundColor= this.getLastPlayerColor();
+                        return row;
+                    }
+                }
+                return null;
+            }
+
+            getLastPlayerColor = () => {
+                return this.state.playerColors[this.state.currentPlayer-1];
+            }
+
+            getBgColorOfCell = (row, column) => {
+                console.log(`getBgColorOfCell td-${row}-${column}`);// debug line
+                return document.getElementById(`td-${row}-${column}`).style.backgroundColor;
+            }
+
+            endTurn = () => {
+                let nextPlayer = 0; 
+                if(this.state.currentPlayer===1){
+                    nextPlayer = 2;
+                } else {
+                    nextPlayer = 1;
+                }
+                this.setState({currentPlayer:nextPlayer});
+            }
+
+            newGameSubmitHandler = async () => {
+                console.log('in newGameSubmitHandler');
+                const heightInput = document.getElementById('heightIn').value;
+                const widthImput = document.getElementById('widthIn').value;
+                await this.setState({
+                    currentPlayer: 1,
+                    winner: null,
+                    height: 0,
+                    width: 0,
+                });
+
+                this.setState({
+                    height: heightInput,
+                    width: widthImput,
+                })
+            }
+            
+            renderCurrentPlayer = () => {
+                const playerNum = this.state.currentPlayer;
+                return (
+                    <React.Fragment>
+                    <div style={{backgroundColor: this.state.playerColors[playerNum-1], border: "1px solid", height: "20px", width: "20px"}}></div>
+                    <span>{`Player ${playerNum}'s turn`}</span>
+                    </React.Fragment>
+                );
+            }
+
+            generateTable = () => {
+              let table = [];
+              for (let row = 1; row <= this.state.height; row++) {
+                let children = [];
+                for (let col = 1; col <= this.state.width; col++) {
+                  children.push(
+                    <td 
+                        id = {`td-${row}-${col}`} 
+                        style = {{
+                            border: "1px solid", 
+                            height: "20px", 
+                            width: "20px", 
+                            backgroundColor: 'white'}}
+                        onClick={this.handleGridClick}
+                    />)
+                  // citation: https://blog.cloudboost.io/for-loops-in-react-render-no-you-didnt-6c9f4aa73778
+                }
+                table.push(<tr>{children}</tr>);
+              }
+              return table;
+            }
+            render( ) {
+
+                return (
+                <React.Fragment>
+                
+                    <label>Width</label>
+                    <input id='heightIn' defaultValue='6'/>
+                    <br/>
+                    <label>Height</label>
+                    <input id='widthIn' defaultValue='7'/>
+                    <br/>
+                    <input id='newGameButton' type='submit' value='New Game' onClick={this.newGameSubmitHandler}/>
+                <table id='tt' style = {{border: "1px solid"}}> { this.generateTable() } </table>
+                <br/>
+                <br/>
+                { this.state.currentPlayer ? this.renderCurrentPlayer() : null }
+                { this.state.winner ? <h2>{`Player ${this.state.winner} wins`}</h2>: null }
+                </React.Fragment>
+                );
+            }
+        }
+        ReactDOM.render(
+            <ReactSample />,
+            document.querySelector('.react-sample')
+        );
+        </script>
+
+    </head>
+    <body>
+        <!-- react sample html -->
+        <div class="react-sample">
+        </div>
+    </body>
+</html>
